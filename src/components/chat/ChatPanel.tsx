@@ -34,8 +34,8 @@ export function ChatPanel({
   autorun = false,
 }: {
   conversationId: string | null;
-  conversationModel?: string;
-  autorun?: boolean;
+  conversationModel?: string | undefined;
+  autorun?: boolean | undefined;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
