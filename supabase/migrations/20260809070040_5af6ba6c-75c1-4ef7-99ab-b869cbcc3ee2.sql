@@ -1,0 +1,3 @@
+CREATE POLICY "chat_files_own_read" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'chat-files' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "chat_files_own_insert" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'chat-files' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "chat_files_own_delete" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'chat-files' AND (storage.foldername(name))[1] = auth.uid()::text);
