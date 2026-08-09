@@ -12,10 +12,10 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in · Priyanshu AI" },
-      { name: "description", content: "Sign in or create your Priyanshu AI account to start chatting with your assistant." },
-      { property: "og:title", content: "Sign in · Priyanshu AI" },
-      { property: "og:description", content: "Create an account and start chatting with Priyanshu AI." },
+      { title: "Sign in · Priyanshu 2.0" },
+      { name: "description", content: "Sign in or create your Priyanshu 2.0 account to start chatting with your assistant." },
+      { property: "og:title", content: "Sign in · Priyanshu 2.0" },
+      { property: "og:description", content: "Create an account and start chatting with Priyanshu 2.0." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -89,7 +89,7 @@ function AuthPage() {
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signin" ? "Sign in to continue to Priyanshu AI" : "Start chatting in under a minute"}
+            {mode === "signin" ? "Sign in to continue to Priyanshu 2.0" : "Start chatting in under a minute"}
           </p>
         </div>
 
@@ -142,7 +142,7 @@ function AuthPage() {
               </Button>
             </form>
             <p className="mt-4 text-center text-xs text-muted-foreground">
-              {mode === "signin" ? "New to Priyanshu AI?" : "Already have an account?"}{" "}
+              {mode === "signin" ? "New to Priyanshu 2.0?" : "Already have an account?"}{" "}
               <button
                 className="text-primary underline underline-offset-4"
                 onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
