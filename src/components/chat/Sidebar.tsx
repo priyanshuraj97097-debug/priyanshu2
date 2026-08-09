@@ -144,7 +144,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 >
                   <Pin className="size-3.5" /> {c.is_pinned ? "Unpin" : "Pin"}
                 </DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" onSelect={() => remove.mutate(c.id)}>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onSelect={() => remove.mutate(c.id)}
+                >
                   <Trash2 className="size-3.5" /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
