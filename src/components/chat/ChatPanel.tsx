@@ -174,7 +174,7 @@ export function ChatPanel({
               <h1 className="mt-6 text-2xl font-semibold sm:text-3xl">How can I help today?</h1>
               <p className="mt-2 max-w-md text-sm text-muted-foreground">
                 Ask anything, attach a file for analysis, or pick a different model to change how
-                Priyanshu AI thinks.
+                Priyanshu 2.0 thinks.
               </p>
               <div className="mt-8 grid w-full gap-2 sm:grid-cols-2">
                 {SUGGESTIONS.map((s) => (
@@ -269,7 +269,7 @@ export function ChatPanel({
                   if (!isStreaming) send.mutate();
                 }
               }}
-              placeholder="Message Priyanshu AI…"
+              placeholder="Message Priyanshu 2.0…"
               rows={1}
               className="max-h-48 min-h-11 resize-none border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:ring-0"
             />
@@ -328,7 +328,7 @@ export function ChatPanel({
             </div>
           </div>
           <p className="mt-2 text-center text-[11px] text-muted-foreground">
-            Priyanshu AI can make mistakes. Verify important information.
+            Priyanshu 2.0 can make mistakes. Verify important information.
           </p>
         </div>
       </div>

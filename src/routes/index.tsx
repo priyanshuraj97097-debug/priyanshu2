@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Priyanshu AI — Your modular AI assistant" },
+      { title: "Priyanshu 2.0 — Your modular AI assistant" },
       {
         name: "description",
         content:
-          "Priyanshu AI is a fast, private AI assistant: multi-model chat, file analysis, saved conversations and a workspace built for real work.",
+          "Priyanshu 2.0 is a fast, private AI assistant: multi-model chat, file analysis, saved conversations and a workspace built for real work.",
       },
-      { property: "og:title", content: "Priyanshu AI — Your modular AI assistant" },
+      { property: "og:title", content: "Priyanshu 2.0 — Your modular AI assistant" },
       {
         property: "og:description",
         content: "Multi-model AI chat with file analysis, searchable history and a premium workspace.",
@@ -41,7 +41,7 @@ function Landing() {
           <div className="brand-gradient-bg flex size-8 items-center justify-center rounded-lg">
             <Sparkles className="size-4 text-primary-foreground" />
           </div>
-          <span className="font-display font-semibold">Priyanshu AI</span>
+          <span className="font-display font-semibold">Priyanshu 2.0</span>
         </div>
         <Link to="/auth">
           <Button variant="secondary" size="sm">
@@ -56,7 +56,7 @@ function Landing() {
             The assistant workspace
           </p>
           <h1 className="mx-auto mt-5 max-w-3xl text-4xl font-semibold leading-tight sm:text-6xl">
-            Think faster with <span className="brand-gradient-text">Priyanshu AI</span>
+            Think faster with <span className="brand-gradient-text">Priyanshu 2.0</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground">
             A general-purpose AI assistant with multi-model chat, file understanding and a workspace
@@ -93,7 +93,7 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border px-6 py-8 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Priyanshu AI
+        © {new Date().getFullYear()} Priyanshu 2.0
       </footer>
     </div>
   );

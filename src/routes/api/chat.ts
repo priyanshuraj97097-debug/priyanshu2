@@ -89,7 +89,7 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const systemParts = [
-          "You are Priyanshu AI, a precise, friendly and capable general-purpose AI assistant. Use markdown for structure and code blocks. Be direct and helpful.",
+          "You are Priyanshu 2.0, a precise, friendly and capable general-purpose AI assistant. Use markdown for structure and code blocks. Be direct and helpful.",
           conversation.system_prompt,
           prefs?.custom_instructions ? `User custom instructions:\n${prefs.custom_instructions}` : null,
           memory?.length ? `Long-term memory about the user:\n${memory.map((m) => `- ${m.content}`).join("\n")}` : null,

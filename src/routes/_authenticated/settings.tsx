@@ -16,9 +16,9 @@ import { DEFAULT_MODEL_SLUG } from "@/lib/ai/models";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "Settings · Priyanshu AI" },
-      { name: "description", content: "Manage your Priyanshu AI profile, default model, custom instructions and usage." },
-      { property: "og:title", content: "Settings · Priyanshu AI" },
+      { title: "Settings · Priyanshu 2.0" },
+      { name: "description", content: "Manage your Priyanshu 2.0 profile, default model, custom instructions and usage." },
+      { property: "og:title", content: "Settings · Priyanshu 2.0" },
       { property: "og:description", content: "Manage your profile, default model and custom instructions." },
     ],
   }),

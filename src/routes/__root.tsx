@@ -78,9 +78,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Priyanshu AI" },
+      { title: "Priyanshu 2.0" },
       { name: "description", content: "A modular, multi-model AI assistant workspace." },
-      { property: "og:title", content: "Priyanshu AI" },
+      { property: "og:title", content: "Priyanshu 2.0" },
       { property: "og:description", content: "A modular, multi-model AI assistant workspace." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

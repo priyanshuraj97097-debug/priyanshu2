@@ -78,7 +78,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <div className="brand-gradient-bg flex size-8 items-center justify-center rounded-lg">
           <Sparkles className="size-4 text-primary-foreground" />
         </div>
-        <span className="font-display text-sm font-semibold tracking-tight">Priyanshu AI</span>
+        <span className="font-display text-sm font-semibold tracking-tight">Priyanshu 2.0</span>
       </div>
 
       <div className="space-y-1 px-3">

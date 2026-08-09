@@ -9,10 +9,10 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 export const Route = createFileRoute("/_authenticated/chat")({
   head: () => ({
     meta: [
-      { title: "Workspace · Priyanshu AI" },
-      { name: "description", content: "Your private Priyanshu AI workspace: conversations, files and models." },
-      { property: "og:title", content: "Workspace · Priyanshu AI" },
-      { property: "og:description", content: "Your private Priyanshu AI workspace." },
+      { title: "Workspace · Priyanshu 2.0" },
+      { name: "description", content: "Your private Priyanshu 2.0 workspace: conversations, files and models." },
+      { property: "og:title", content: "Workspace · Priyanshu 2.0" },
+      { property: "og:description", content: "Your private Priyanshu 2.0 workspace." },
     ],
   }),
   component: ChatLayout,
@@ -43,7 +43,7 @@ function ChatLayout() {
             <div className="brand-gradient-bg flex size-6 items-center justify-center rounded-md">
               <Sparkles className="size-3 text-primary-foreground" />
             </div>
-            <span className="text-sm font-semibold">Priyanshu AI</span>
+            <span className="text-sm font-semibold">Priyanshu 2.0</span>
           </div>
         </header>
         <Outlet />
