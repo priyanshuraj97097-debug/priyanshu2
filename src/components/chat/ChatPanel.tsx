@@ -238,11 +238,26 @@ export function ChatPanel({
                     {streamed ? (
                       <Markdown content={streamed} />
                     ) : (
-                      <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="size-3.5 animate-spin" /> Thinking…
+                      <span className="inline-flex items-center gap-2 text-sm">
+                        <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                        <span className="aurora-text font-medium">Priyanshu 2.0 is thinking…</span>
                       </span>
                     )}
                   </div>
+                </div>
+              )}
+              {failed && !isStreaming && (
+                <div className="flex flex-col items-start gap-2 rounded-xl border border-border bg-card/60 px-4 py-3">
+                  <p className="text-sm text-muted-foreground">
+                    Priyanshu 2.0 is temporarily busy. Please try again in a moment.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => conversationId && runStream(conversationId)}
+                  >
+                    Try again
+                  </Button>
                 </div>
               )}
             </div>
@@ -268,7 +283,11 @@ export function ChatPanel({
               ))}
             </div>
           )}
-          <div className="rounded-2xl border border-border bg-card p-2 shadow-lg transition-colors focus-within:border-primary/60">
+          <div className="aurora-frame rounded-2xl border border-border bg-card p-2 shadow-lg transition-colors focus-within:border-primary/60">
+            <span
+              aria-hidden
+              className={`aurora-frame-glow ${isStreaming ? "aurora-active" : ""}`}
+            />
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
