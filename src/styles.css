@@ -180,3 +180,68 @@
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }
+
+/* Animated aurora border for the composer + generating state (blue/purple/pink/cyan) */
+@keyframes aurora-pan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@utility aurora-frame {
+  position: relative;
+  isolation: isolate;
+}
+
+@utility aurora-frame-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    110deg,
+    oklch(0.7 0.18 250),
+    oklch(0.68 0.2 300),
+    oklch(0.72 0.18 350),
+    oklch(0.78 0.14 200),
+    oklch(0.7 0.18 250)
+  );
+  background-size: 300% 300%;
+  animation: aurora-pan 14s ease-in-out infinite;
+  opacity: 0.35;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+  z-index: -1;
+}
+
+@utility aurora-active {
+  opacity: 0.95;
+  animation-duration: 5s;
+}
+
+@utility aurora-text {
+  background: linear-gradient(
+    110deg,
+    oklch(0.75 0.16 250),
+    oklch(0.72 0.18 300),
+    oklch(0.78 0.15 350),
+    oklch(0.82 0.13 200),
+    oklch(0.75 0.16 250)
+  );
+  background-size: 300% 300%;
+  animation: aurora-pan 5s ease-in-out infinite;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-frame-glow,
+  .aurora-text {
+    animation: none !important;
+  }
+}

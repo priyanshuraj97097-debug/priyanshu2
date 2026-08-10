@@ -45,6 +45,7 @@ export function ChatPanel({
   const [isStreaming, setIsStreaming] = useState(false);
   const [model, setModel] = useState(conversationModel ?? DEFAULT_MODEL_SLUG);
   const [uploading, setUploading] = useState(false);
+  const [failed, setFailed] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -67,6 +68,7 @@ export function ChatPanel({
   async function runStream(id: string) {
     setIsStreaming(true);
     setStreamed("");
+    setFailed(false);
     const controller = new AbortController();
     abortRef.current = controller;
     try {
@@ -79,7 +81,11 @@ export function ChatPanel({
         signal: controller.signal,
       });
       if (!res.ok || !res.body) {
-        toast.error(await res.text().catch(() => "The assistant could not respond."));
+        const message = await res
+          .text()
+          .catch(() => "Priyanshu 2.0 is temporarily busy. Please try again in a moment.");
+        setFailed(true);
+        toast.error(message || "Priyanshu 2.0 is temporarily busy. Please try again in a moment.");
         return;
       }
       const reader = res.body.getReader();
@@ -90,7 +96,10 @@ export function ChatPanel({
         setStreamed((prev) => prev + decoder.decode(value, { stream: true }));
       }
     } catch (error) {
-      if ((error as Error).name !== "AbortError") toast.error("Connection interrupted.");
+      if ((error as Error).name !== "AbortError") {
+        setFailed(true);
+        toast.error("Priyanshu 2.0 is temporarily busy. Please try again in a moment.");
+      }
     } finally {
       abortRef.current = null;
       setIsStreaming(false);
@@ -229,11 +238,26 @@ export function ChatPanel({
                     {streamed ? (
                       <Markdown content={streamed} />
                     ) : (
-                      <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="size-3.5 animate-spin" /> Thinking…
+                      <span className="inline-flex items-center gap-2 text-sm">
+                        <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                        <span className="aurora-text font-medium">Priyanshu 2.0 is thinking…</span>
                       </span>
                     )}
                   </div>
+                </div>
+              )}
+              {failed && !isStreaming && (
+                <div className="flex flex-col items-start gap-2 rounded-xl border border-border bg-card/60 px-4 py-3">
+                  <p className="text-sm text-muted-foreground">
+                    Priyanshu 2.0 is temporarily busy. Please try again in a moment.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => conversationId && runStream(conversationId)}
+                  >
+                    Try again
+                  </Button>
                 </div>
               )}
             </div>
@@ -259,7 +283,11 @@ export function ChatPanel({
               ))}
             </div>
           )}
-          <div className="rounded-2xl border border-border bg-card p-2 shadow-lg transition-colors focus-within:border-primary/60">
+          <div className="aurora-frame rounded-2xl border border-border bg-card p-2 shadow-lg transition-colors focus-within:border-primary/60">
+            <span
+              aria-hidden
+              className={`aurora-frame-glow ${isStreaming ? "aurora-active" : ""}`}
+            />
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
