@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { BUSY_MESSAGE, parseGeminiDelta, streamGemini } from "@/lib/ai/gemini.server";
 
 /**
- * AI model layer — the only place that talks to the AI provider.
+ * AI model layer — the only place that talks to the AI provider (Google Gemini).
  * Provider keys never leave the server.
  */
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 type ChatRequestBody = { conversationId?: string };
 
@@ -32,9 +32,6 @@ export const Route = createFileRoute("/api/chat")({
       POST: async ({ request }) => {
         const accessToken = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
         if (!accessToken) return new Response("Unauthorized", { status: 401 });
-
-        const apiKey = process.env["LOVABLE_API_KEY"];
-        if (!apiKey) return new Response("AI is not configured", { status: 500 });
 
         const { conversationId } = (await request.json()) as ChatRequestBody;
         if (!conversationId) return new Response("conversationId is required", { status: 400 });
@@ -96,36 +93,22 @@ export const Route = createFileRoute("/api/chat")({
           fileContext ? `Files the user attached in this conversation:\n${fileContext}` : null,
         ].filter(Boolean);
 
-        const messages = [
-          { role: "system", content: systemParts.join("\n\n") },
-          ...(history ?? [])
-            .filter((m) => m.role === "user" || m.role === "assistant")
-            .map((m) => ({ role: m.role, content: m.content })),
-        ];
+        const turns = (history ?? [])
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
 
-        const model = conversation.model_slug || "google/gemini-3.6-flash";
-        const body: Record<string, unknown> = { model, messages, stream: true };
-        if (model.startsWith("openai/gpt-5.6")) body["reasoning_effort"] = "none";
-
-        const upstream = await fetch(GATEWAY_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-          body: JSON.stringify(body),
+        const result = await streamGemini({
+          system: systemParts.join("\n\n"),
+          turns,
+          signal: request.signal,
         });
 
-        if (!upstream.ok || !upstream.body) {
-          const detail = await upstream.text().catch(() => "");
-          const status = upstream.status === 429 || upstream.status === 402 ? upstream.status : 500;
-          console.error("AI gateway error", upstream.status, detail);
-          return new Response(
-            status === 429
-              ? "Rate limit reached. Please try again in a moment."
-              : status === 402
-                ? "AI credits exhausted. Add credits to keep chatting."
-                : "The assistant could not respond right now.",
-            { status },
-          );
+        if (!result.ok) {
+          return new Response(result.message, { status: result.status });
         }
+
+        const model = result.model;
+        const upstreamBody = result.body;
 
         const encoder = new TextEncoder();
         const decoder = new TextDecoder();
@@ -133,7 +116,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const stream = new ReadableStream<Uint8Array>({
           async start(controller) {
-            const reader = upstream.body!.getReader();
+            const reader = upstreamBody.getReader();
             let buffer = "";
             try {
               for (;;) {
@@ -147,22 +130,16 @@ export const Route = createFileRoute("/api/chat")({
                   if (!trimmed.startsWith("data:")) continue;
                   const payload = trimmed.slice(5).trim();
                   if (payload === "[DONE]") continue;
-                  try {
-                    const json = JSON.parse(payload) as {
-                      choices?: { delta?: { content?: string } }[];
-                    };
-                    const delta = json.choices?.[0]?.delta?.content;
-                    if (delta) {
-                      full += delta;
-                      controller.enqueue(encoder.encode(delta));
-                    }
-                  } catch {
-                    /* ignore keep-alive fragments */
+                  const delta = parseGeminiDelta(payload);
+                  if (delta) {
+                    full += delta;
+                    controller.enqueue(encoder.encode(delta));
                   }
                 }
               }
             } catch (error) {
               console.error("stream error", error);
+              if (!full) controller.enqueue(encoder.encode(BUSY_MESSAGE));
             } finally {
               controller.close();
               if (full.trim()) {
