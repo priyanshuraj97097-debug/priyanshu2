@@ -4,7 +4,7 @@
  * The model is configured here in ONE place. Change GEMINI_MODEL (or set the
  * GEMINI_MODEL env var) to switch models without touching any UI code.
  */
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+export const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
 
 export function getGeminiModel(): string {
   return process.env["GEMINI_MODEL"] || DEFAULT_GEMINI_MODEL;
