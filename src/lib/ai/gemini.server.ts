@@ -14,6 +14,8 @@ export const GEMINI_GENERATION_CONFIG = {
   temperature: 0.8,
   topP: 0.95,
   maxOutputTokens: 8192,
+  // Keep latency low for conversational replies.
+  thinkingConfig: { thinkingLevel: "low" },
 };
 
 export type GeminiTurn = { role: "user" | "assistant"; content: string };
