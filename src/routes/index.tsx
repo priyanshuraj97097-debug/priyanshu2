@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { FileText, Layers, Lock, MessagesSquare, Sparkles, Zap } from "lucide-react";
 
+import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -38,9 +39,7 @@ function Landing() {
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2">
-          <div className="brand-gradient-bg flex size-8 items-center justify-center rounded-lg">
-            <Sparkles className="size-4 text-primary-foreground" />
-          </div>
+          <BrandLogo className="size-9" />
           <span className="font-display font-semibold">Priyanshu 2.0</span>
         </div>
         <Link to="/auth">

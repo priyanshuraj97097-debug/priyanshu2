@@ -10,11 +10,11 @@ import {
   PlusIcon,
   Search,
   Settings,
-  Sparkles,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -75,9 +75,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex items-center gap-2 px-4 py-4">
-        <div className="brand-gradient-bg flex size-8 items-center justify-center rounded-lg">
-          <Sparkles className="size-4 text-primary-foreground" />
-        </div>
+        <BrandLogo className="size-8" />
         <span className="font-display text-sm font-semibold tracking-tight">Priyanshu 2.0</span>
       </div>
 
