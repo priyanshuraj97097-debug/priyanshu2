@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { FileText, Layers, Lock, MessagesSquare, Sparkles, Zap } from "lucide-react";
 
+import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 
@@ -35,6 +37,38 @@ const FEATURES = [
 ];
 
 function Landing() {
+  const navigate = useNavigate();
+  const [resuming, setResuming] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) {
+        setResuming(true);
+        void navigate({ to: "/chat", replace: true });
+      }
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session) {
+        setResuming(true);
+        void navigate({ to: "/chat", replace: true });
+      }
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  if (resuming) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
+        <BrandLogo className="size-20 animate-pulse" />
+        <p className="text-sm text-muted-foreground">Opening your Priyanshu 2.0 workspace…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
