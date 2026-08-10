@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowUp, Loader2, Mic, Paperclip, Sparkles, Square, X } from "lucide-react";
+import { ArrowUp, Check, Copy, Loader2, Mic, Paperclip, Square, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Markdown } from "@/components/chat/Markdown";
@@ -22,11 +23,32 @@ import {
 import { DEFAULT_MODEL_SLUG } from "@/lib/ai/models";
 
 const SUGGESTIONS = [
-  "Explain a complex topic in simple terms",
-  "Draft a professional email for me",
-  "Review this code and suggest improvements",
-  "Summarise the file I upload",
+  { label: "Explain something", prompt: "Explain quantum computing in simple terms" },
+  { label: "Help me write", prompt: "Help me write a professional email about " },
+  { label: "Help me code", prompt: "Write a TypeScript function that " },
+  { label: "Analyze a file", prompt: "Summarise the key points of the file I attach" },
+  { label: "Brainstorm ideas", prompt: "Brainstorm 10 creative ideas for " },
+  { label: "Answer a question", prompt: "" },
 ];
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      aria-label="Copy response"
+      onClick={() => {
+        void navigator.clipboard.writeText(text);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1500);
+      }}
+      className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+    >
+      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
 
 export function ChatPanel({
   conversationId,
@@ -177,22 +199,20 @@ export function ChatPanel({
         <div className="mx-auto w-full max-w-3xl px-4 py-8">
           {empty ? (
             <div className="flex flex-col items-center justify-center pt-10 text-center sm:pt-20">
-              <div className="brand-gradient-bg flex size-12 items-center justify-center rounded-2xl">
-                <Sparkles className="size-6 text-primary-foreground" />
-              </div>
+              <BrandLogo className="size-20 sm:size-24" />
               <h1 className="mt-6 text-2xl font-semibold sm:text-3xl">How can I help today?</h1>
               <p className="mt-2 max-w-md text-sm text-muted-foreground">
                 Ask anything, attach a file for analysis, or pick a different model to change how
                 Priyanshu 2.0 thinks.
               </p>
-              <div className="mt-8 grid w-full gap-2 sm:grid-cols-2">
+              <div className="mt-8 grid w-full gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {SUGGESTIONS.map((s) => (
                   <button
-                    key={s}
-                    onClick={() => setInput(s)}
-                    className="rounded-xl border border-border bg-card/60 px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                    key={s.label}
+                    onClick={() => setInput(s.prompt)}
+                    className="rounded-2xl border border-border bg-card/60 px-4 py-3 text-left text-sm font-medium transition-colors hover:border-primary/50 hover:bg-card"
                   >
-                    {s}
+                    {s.label}
                   </button>
                 ))}
               </div>
@@ -220,20 +240,17 @@ export function ChatPanel({
                   </div>
                 ) : (
                   <div key={m.id} className="flex gap-3">
-                    <div className="brand-gradient-bg mt-1 flex size-7 shrink-0 items-center justify-center rounded-lg">
-                      <Sparkles className="size-3.5 text-primary-foreground" />
-                    </div>
+                    <BrandLogo className="mt-1 size-7" />
                     <div className="min-w-0 flex-1">
                       <Markdown content={m.content} />
+                      <div className="mt-1.5"><CopyButton text={m.content} /></div>
                     </div>
                   </div>
                 ),
               )}
               {isStreaming && (
                 <div className="flex gap-3">
-                  <div className="brand-gradient-bg mt-1 flex size-7 shrink-0 items-center justify-center rounded-lg">
-                    <Sparkles className="size-3.5 text-primary-foreground" />
-                  </div>
+                  <BrandLogo className="mt-1 size-7" />
                   <div className="min-w-0 flex-1">
                     {streamed ? (
                       <Markdown content={streamed} />
@@ -267,7 +284,7 @@ export function ChatPanel({
       </div>
 
       <div className="border-t border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto w-full max-w-3xl px-4 py-4">
+        <div className="mx-auto w-full max-w-3xl px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-4">
           {attachments.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-2">
               {attachments.map((a) => (
@@ -297,7 +314,7 @@ export function ChatPanel({
                   if (!isStreaming) send.mutate();
                 }
               }}
-              placeholder="Message Priyanshu 2.0…"
+              placeholder="Ask Priyanshu 2.0 anything…"
               rows={1}
               className="max-h-48 min-h-11 resize-none border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:ring-0"
             />

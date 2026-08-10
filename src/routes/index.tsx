@@ -1,6 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { FileText, Layers, Lock, MessagesSquare, Sparkles, Zap } from "lucide-react";
 
+import { supabase } from "@/integrations/supabase/client";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -34,13 +37,43 @@ const FEATURES = [
 ];
 
 function Landing() {
+  const navigate = useNavigate();
+  const [resuming, setResuming] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) {
+        setResuming(true);
+        void navigate({ to: "/chat", replace: true });
+      }
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session) {
+        setResuming(true);
+        void navigate({ to: "/chat", replace: true });
+      }
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  if (resuming) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
+        <BrandLogo className="size-20 animate-pulse" />
+        <p className="text-sm text-muted-foreground">Opening your Priyanshu 2.0 workspace…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2">
-          <div className="brand-gradient-bg flex size-8 items-center justify-center rounded-lg">
-            <Sparkles className="size-4 text-primary-foreground" />
-          </div>
+          <BrandLogo className="size-9" />
           <span className="font-display font-semibold">Priyanshu 2.0</span>
         </div>
         <Link to="/auth">

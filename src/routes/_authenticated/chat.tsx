@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { Menu, Sparkles } from "lucide-react";
+import { Menu } from "lucide-react";
+
+import { BrandLogo } from "@/components/BrandLogo";
 
 import { Sidebar } from "@/components/chat/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -40,9 +42,7 @@ function ChatLayout() {
             </SheetContent>
           </Sheet>
           <div className="flex items-center gap-2">
-            <div className="brand-gradient-bg flex size-6 items-center justify-center rounded-md">
-              <Sparkles className="size-3 text-primary-foreground" />
-            </div>
+            <BrandLogo className="size-7" />
             <span className="text-sm font-semibold">Priyanshu 2.0</span>
           </div>
         </header>

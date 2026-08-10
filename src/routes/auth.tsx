@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,9 +83,7 @@ function AuthPage() {
     <div className="surface-glow flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="brand-gradient-bg flex size-11 items-center justify-center rounded-2xl">
-            <Sparkles className="size-5 text-primary-foreground" />
-          </div>
+          <BrandLogo className="size-16" />
           <h1 className="mt-4 text-2xl font-semibold">
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>
