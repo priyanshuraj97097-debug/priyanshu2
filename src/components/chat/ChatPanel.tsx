@@ -45,6 +45,7 @@ export function ChatPanel({
   const [isStreaming, setIsStreaming] = useState(false);
   const [model, setModel] = useState(conversationModel ?? DEFAULT_MODEL_SLUG);
   const [uploading, setUploading] = useState(false);
+  const [failed, setFailed] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -67,6 +68,7 @@ export function ChatPanel({
   async function runStream(id: string) {
     setIsStreaming(true);
     setStreamed("");
+    setFailed(false);
     const controller = new AbortController();
     abortRef.current = controller;
     try {
@@ -79,7 +81,11 @@ export function ChatPanel({
         signal: controller.signal,
       });
       if (!res.ok || !res.body) {
-        toast.error(await res.text().catch(() => "The assistant could not respond."));
+        const message = await res
+          .text()
+          .catch(() => "Priyanshu 2.0 is temporarily busy. Please try again in a moment.");
+        setFailed(true);
+        toast.error(message || "Priyanshu 2.0 is temporarily busy. Please try again in a moment.");
         return;
       }
       const reader = res.body.getReader();
@@ -90,7 +96,10 @@ export function ChatPanel({
         setStreamed((prev) => prev + decoder.decode(value, { stream: true }));
       }
     } catch (error) {
-      if ((error as Error).name !== "AbortError") toast.error("Connection interrupted.");
+      if ((error as Error).name !== "AbortError") {
+        setFailed(true);
+        toast.error("Priyanshu 2.0 is temporarily busy. Please try again in a moment.");
+      }
     } finally {
       abortRef.current = null;
       setIsStreaming(false);
