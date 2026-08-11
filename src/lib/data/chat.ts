@@ -167,9 +167,15 @@ export async function searchConversations(term: string) {
 
 export async function uploadFile(file: File, conversationId: string | null) {
   const user_id = await requireUserId();
+  if (file.size > MAX_FILE_BYTES) {
+    throw new Error(`${file.name} is larger than 20 MB.`);
+  }
+  if (!isSupportedFile(file)) {
+    throw new Error(`${file.name} isn't a supported file type.`);
+  }
   const path = `${user_id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
   const { error: upErr } = await supabase.storage.from("chat-files").upload(path, file);
-  if (upErr) throw upErr;
+  if (upErr) throw new Error("Upload failed. Please try again.");
 
   let extracted: string | null = null;
   if (/^text\/|json|csv|markdown|javascript|xml/.test(file.type) || /\.(md|txt|csv|json|ts|tsx|js|py)$/i.test(file.name)) {
@@ -212,4 +218,36 @@ export async function uploadFile(file: File, conversationId: string | null) {
     mime_type: data.mime_type,
     size_bytes: data.size_bytes,
   } as Attachment;
+}
+
+export const MAX_FILE_BYTES = 20 * 1024 * 1024;
+
+/** Formats we can actually do something useful with. */
+export const SUPPORTED_FILE_ACCEPT =
+  "image/*,application/pdf,.txt,.md,.csv,.json,.ts,.tsx,.js,.jsx,.py,.html,.css,.xml,.docx";
+
+const TEXT_EXT = /\.(md|markdown|txt|csv|json|ts|tsx|js|jsx|py|html|css|xml|yml|yaml|sql|docx)$/i;
+
+export function isSupportedFile(file: File) {
+  const type = file.type || "";
+  return (
+    type.startsWith("image/") ||
+    type === "application/pdf" ||
+    /^text\/|json|csv|markdown|javascript|xml/.test(type) ||
+    TEXT_EXT.test(file.name)
+  );
+}
+
+/** Short-lived signed URL for a private file the current user owns. */
+export async function getFileUrl(fileId: string): Promise<string | null> {
+  const { data: row, error } = await supabase
+    .from("uploaded_files")
+    .select("storage_path")
+    .eq("id", fileId)
+    .maybeSingle();
+  if (error || !row) return null;
+  const { data } = await supabase.storage
+    .from("chat-files")
+    .createSignedUrl(row.storage_path, 60 * 60);
+  return data?.signedUrl ?? null;
 }
