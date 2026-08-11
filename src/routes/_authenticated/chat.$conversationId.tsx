@@ -5,9 +5,8 @@ import { ChatPanel } from "@/components/chat/ChatPanel";
 import { getConversation } from "@/lib/data/chat";
 
 export const Route = createFileRoute("/_authenticated/chat/$conversationId")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    autorun: search["autorun"] === true || search["autorun"] === "true" ? true : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { autorun?: true } =>
+    search["autorun"] === true || search["autorun"] === "true" ? { autorun: true } : {},
   component: ConversationRoute,
 });
 
