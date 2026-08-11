@@ -107,7 +107,14 @@ export const Route = createFileRoute("/api/generate-image")({
           role: "assistant",
           content: `Here is the image for: **${prompt.trim()}**`,
           model_slug: IMAGE_MODEL,
-          attachments: [fileRow] as never,
+          attachments: [
+            {
+              id: fileRow.id,
+              name: fileRow.file_name,
+              mime_type: fileRow.mime_type,
+              size_bytes: fileRow.size_bytes,
+            },
+          ] as never,
           metadata: { kind: "image" } as never,
         });
         await supabase
