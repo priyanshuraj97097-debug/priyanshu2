@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "priyanshu-2-0",
+  "compatibility_date": "2026-10-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "src/server.ts",
+  "ai": {
+    "binding": "AI"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

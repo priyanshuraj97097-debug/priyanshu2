@@ -1,9 +1,7 @@
-import logo from "@/assets/priyanshu-logo.png.asset.json";
-
 export function BrandLogo({ className = "size-8" }: { className?: string }) {
   return (
     <img
-      src={logo.url}
+      src="/priyanshu-logo.png"
       alt="Priyanshu 2.0 logo"
       width={512}
       height={512}

@@ -8,17 +8,9 @@ import { DEFAULT_MODE, type ModeKey } from "@/lib/ai/modes";
  */
 export const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
 
-export function getGeminiModel(): string {
+function getGeminiModel(): string {
   return process.env["GEMINI_MODEL"] || DEFAULT_GEMINI_MODEL;
 }
-
-export const GEMINI_GENERATION_CONFIG = {
-  temperature: 0.8,
-  topP: 0.95,
-  maxOutputTokens: 8192,
-  // Keep latency low for conversational replies.
-  thinkingConfig: { thinkingLevel: "low" },
-};
 
 /** Per-mode server-side behaviour. Modes are real: they change instructions and sampling. */
 type ModeConfig = {
