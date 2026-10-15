@@ -1,7 +1,8 @@
 /**
  * Image generation provider layer (server-only).
- * Swap IMAGE_MODEL to change providers without touching UI code.
  */
+import { env } from "cloudflare:workers";
+
 export const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 
 export type ImageResult =
@@ -10,7 +11,6 @@ export type ImageResult =
 
 export async function generateImage(prompt: string): Promise<ImageResult> {
   try {
-    const { env } = await import("cloudflare:workers");
     const result = await env.AI.run(IMAGE_MODEL, { prompt, steps: 4 });
     if (!result.image) {
       console.error("Workers AI returned no generated image");

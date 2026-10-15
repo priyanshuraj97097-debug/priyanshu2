@@ -66,10 +66,10 @@ export const Route = createFileRoute("/api/generate-image")({
         }
 
         const bytes = decodeBase64(result.base64);
-        const path = `${user.id}/generated/${crypto.randomUUID()}.png`;
+        const path = `${user.id}/generated/${crypto.randomUUID()}.jpg`;
         const { error: uploadError } = await supabase.storage
           .from("chat-files")
-          .upload(path, bytes, { contentType: "image/png" });
+          .upload(path, bytes, { contentType: "image/jpeg" });
         if (uploadError) {
           console.error("generated image upload failed", uploadError.message);
           return new Response(
@@ -78,14 +78,14 @@ export const Route = createFileRoute("/api/generate-image")({
           );
         }
 
-        const fileName = `${prompt.trim().slice(0, 40).replace(/[^\w\s.-]/g, "") || "image"}.png`;
+        const fileName = `${prompt.trim().slice(0, 40).replace(/[^\w\s.-]/g, "") || "image"}.jpg`;
         const { data: fileRow, error: fileError } = await supabase
           .from("uploaded_files")
           .insert({
             user_id: user.id,
             conversation_id: conversationId,
             file_name: fileName,
-            mime_type: "image/png",
+            mime_type: "image/jpeg",
             size_bytes: bytes.byteLength,
             storage_path: path,
             status: "ready",
