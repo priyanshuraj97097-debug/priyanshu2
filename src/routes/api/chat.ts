@@ -35,8 +35,9 @@ function toBase64(bytes: Uint8Array): string {
 }
 
 function userScopedClient(accessToken: string) {
-  const url = process.env["SUPABASE_URL"]!;
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  const url = process.env["SUPABASE_URL"];
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  if (!url || !key) throw new Error("Database service configuration is missing");
   return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {
