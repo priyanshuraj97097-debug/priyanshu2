@@ -8,3 +8,8 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+
+## Deployment architecture
+
+- Deploy TanStack Start through the official Cloudflare Vite plugin and Wrangler; use Worker bindings for production services because they execute in Cloudflare’s runtime.
