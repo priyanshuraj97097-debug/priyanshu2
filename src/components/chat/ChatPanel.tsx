@@ -76,10 +76,12 @@ export function ChatPanel({
   conversationId,
   conversationModel,
   autorun = false,
+  autorunImage = false,
 }: {
   conversationId: string | null;
   conversationModel?: string | undefined;
   autorun?: boolean | undefined;
+  autorunImage?: boolean | undefined;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -99,6 +101,7 @@ export function ChatPanel({
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const startedRef = useRef(false);
+  const imageStartedRef = useRef(false);
   const lastImageRetryRef = useRef<{ id: string; prompt: string } | null>(null);
 
   useEffect(() => {
@@ -289,6 +292,20 @@ export function ChatPanel({
     [queryClient],
   );
 
+  useEffect(() => {
+    if (autorunImage && conversationId && !imageStartedRef.current) {
+      imageStartedRef.current = true;
+      const originalPrompt = messages.find((message) => message.role === "user")?.content;
+      if (originalPrompt) void generateImageFor(conversationId, originalPrompt);
+      void navigate({
+        to: "/chat/$conversationId",
+        params: { conversationId },
+        search: {},
+        replace: true,
+      });
+    }
+  }, [autorunImage, conversationId, generateImageFor, messages, navigate]);
+
   const send = useMutation({
     mutationFn: async () => {
       if (busyRef.current || generatingImage) return;
@@ -312,9 +329,8 @@ export function ChatPanel({
           await navigate({
             to: "/chat/$conversationId",
             params: { conversationId: conversation.id },
-            search: {},
+            search: { generateImage: true },
           });
-          await generateImageFor(conversation.id, text);
           return;
         }
         await navigate({

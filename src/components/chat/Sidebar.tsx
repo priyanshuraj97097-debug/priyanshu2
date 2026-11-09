@@ -75,7 +75,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       if (previous) {
         queryClient.setQueryData<Conversation[]>(["conversations"], previous.filter((item) => item.id !== id));
       }
-      if (params.conversationId === id) await navigate({ to: "/chat" });
       return { previous };
     },
     onError: (error, _id, context) => {

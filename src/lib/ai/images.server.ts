@@ -7,7 +7,7 @@ export const IMAGE_MODEL = "@cf/black-forest-labs/flux-2-klein-4b";
 const FALLBACK_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 
 export type ImageResult =
-  | { ok: true; base64: string }
+  | { ok: true; base64: string; model: string; mimeType: "image/png" | "image/jpeg" }
   | { ok: false; code: "rate_limit" | "network" | "timeout" | "server" | "rejected"; message: string };
 
 function isRateLimit(error: unknown) {
@@ -34,7 +34,7 @@ export async function generateImage(prompt: string): Promise<ImageResult> {
   let primaryError: unknown;
   try {
     const image = await generateWithPrimaryModel(prompt);
-    if (image) return { ok: true, base64: image };
+    if (image) return { ok: true, base64: image, model: IMAGE_MODEL, mimeType: "image/png" };
     primaryError = new Error("Primary image model returned no image");
   } catch (error) {
     primaryError = error;
@@ -43,7 +43,14 @@ export async function generateImage(prompt: string): Promise<ImageResult> {
   console.warn("Primary image model unavailable; trying the fallback model.");
   try {
     const fallback = await env.AI.run(FALLBACK_IMAGE_MODEL, { prompt, steps: 4 });
-    if (fallback.image) return { ok: true, base64: fallback.image };
+    if (fallback.image) {
+      return {
+        ok: true,
+        base64: fallback.image,
+        model: FALLBACK_IMAGE_MODEL,
+        mimeType: "image/jpeg",
+      };
+    }
   } catch (fallbackError) {
     const rateLimited = isRateLimit(primaryError) || isRateLimit(fallbackError);
     return {
