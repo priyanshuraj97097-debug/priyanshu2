@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/generate-image")({
         if (!accessToken) return new Response("Unauthorized", { status: 401 });
 
         const { conversationId, prompt } = (await request.json().catch(() => ({}))) as Body;
-        if (!conversationId || !prompt?.trim()) {
+        if (!conversationId || !prompt?.trim() || prompt.trim().length > 2048) {
           return new Response(JSON.stringify({ error: "A prompt is required." }), {
             status: 400,
             headers: { "Content-Type": "application/json" },
@@ -61,7 +61,7 @@ export const Route = createFileRoute("/api/generate-image")({
         const result = await generateImage(prompt.trim());
         if (!result.ok) {
           return new Response(JSON.stringify({ error: result.message, code: result.code }), {
-            status: 200,
+            status: result.code === "rate_limit" ? 429 : 503,
             headers: { "Content-Type": "application/json" },
           });
         }

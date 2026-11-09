@@ -24,6 +24,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import {
   deleteConversation,
@@ -31,6 +41,7 @@ import {
   renameConversation,
   searchConversations,
   togglePinned,
+  type Conversation,
 } from "@/lib/data/chat";
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -41,6 +52,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [term, setTerm] = useState("");
   const [renaming, setRenaming] = useState<{ id: string; title: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Conversation | null>(null);
 
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations"],
@@ -55,11 +67,28 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["conversations"] });
 
-  const remove = useMutation({
+  const remove = useMutation<void, Error, string, { previous?: Conversation[] }>({
     mutationFn: deleteConversation,
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const previous = queryClient.getQueryData<Conversation[]>(["conversations"]);
+      if (previous) {
+        queryClient.setQueryData<Conversation[]>(["conversations"], previous.filter((item) => item.id !== id));
+      }
+      if (params.conversationId === id) await navigate({ to: "/chat" });
+      return { previous };
+    },
+    onError: (error, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(["conversations"], context.previous);
+      toast.error(error.message || "This conversation could not be deleted. Please try again.");
+    },
     onSuccess: async (_d, id) => {
-      await refresh();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["conversations"] }),
+        queryClient.invalidateQueries({ queryKey: ["search"] }),
+      ]);
       if (params.conversationId === id) navigate({ to: "/chat" });
+      setDeleteTarget(null);
       toast.success("Conversation deleted");
     },
   });
@@ -144,7 +173,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
-                  onSelect={() => remove.mutate(c.id)}
+                  onSelect={() => setDeleteTarget(c)}
                 >
                   <Trash2 className="size-3.5" /> Delete
                 </DropdownMenuItem>
@@ -227,6 +256,36 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <Button onClick={() => renaming && rename.mutate(renaming)}>Save</Button>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open && !remove.isPending) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              “{deleteTarget?.title ?? "Untitled conversation"}” and its messages will be permanently deleted.
+              This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={remove.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={remove.isPending || !deleteTarget}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(event) => {
+                event.preventDefault();
+                if (deleteTarget) remove.mutate(deleteTarget.id);
+              }}
+            >
+              {remove.isPending ? "Deleting…" : "Delete conversation"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
