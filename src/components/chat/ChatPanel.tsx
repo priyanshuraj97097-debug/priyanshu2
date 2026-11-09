@@ -76,10 +76,12 @@ export function ChatPanel({
   conversationId,
   conversationModel,
   autorun = false,
+  autorunImage = false,
 }: {
   conversationId: string | null;
   conversationModel?: string | undefined;
   autorun?: boolean | undefined;
+  autorunImage?: boolean | undefined;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -99,6 +101,8 @@ export function ChatPanel({
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const startedRef = useRef(false);
+  const imageStartedRef = useRef(false);
+  const lastImageRetryRef = useRef<{ id: string; prompt: string } | null>(null);
 
   useEffect(() => {
     if (conversationModel) setModel(conversationModel);
@@ -251,11 +255,13 @@ export function ChatPanel({
 
   const generateImageFor = useCallback(
     async (id: string, prompt: string) => {
+      lastImageRetryRef.current = { id, prompt };
       setGeneratingImage(true);
       setErrorMessage(null);
       try {
         const { data } = await supabase.auth.getSession();
         const token = data.session?.access_token;
+        if (!token) throw new Error("Please sign in again.");
         const res = await fetch("/api/generate-image", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -263,10 +269,20 @@ export function ChatPanel({
         });
         const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
         if (!res.ok || !json?.ok) {
-          setErrorMessage(json?.error ?? "Something went wrong while generating the image. Please try again.");
+          if (mountedRef.current) {
+            setErrorMessage(json?.error ?? "Image generation could not complete. Please try again.");
+          }
+        } else {
+          lastImageRetryRef.current = null;
         }
-      } catch {
-        setErrorMessage("Connection interrupted. Please try again.");
+      } catch (error) {
+        if (mountedRef.current) {
+          setErrorMessage(
+            error instanceof Error && error.message === "Please sign in again."
+              ? error.message
+              : "Connection interrupted. Please try again.",
+          );
+        }
       } finally {
         if (mountedRef.current) setGeneratingImage(false);
         await queryClient.invalidateQueries({ queryKey: ["messages", id] });
@@ -275,6 +291,20 @@ export function ChatPanel({
     },
     [queryClient],
   );
+
+  useEffect(() => {
+    if (autorunImage && conversationId && !imageStartedRef.current) {
+      imageStartedRef.current = true;
+      const originalPrompt = messages.find((message) => message.role === "user")?.content;
+      if (originalPrompt) void generateImageFor(conversationId, originalPrompt);
+      void navigate({
+        to: "/chat/$conversationId",
+        params: { conversationId },
+        search: {},
+        replace: true,
+      });
+    }
+  }, [autorunImage, conversationId, generateImageFor, messages, navigate]);
 
   const send = useMutation({
     mutationFn: async () => {
@@ -285,6 +315,8 @@ export function ChatPanel({
         toast("Describe the image you want to generate.");
         return;
       }
+      setErrorMessage(null);
+      lastImageRetryRef.current = null;
       setInput("");
       const files = attachments;
       setAttachments([]);
@@ -297,9 +329,8 @@ export function ChatPanel({
           await navigate({
             to: "/chat/$conversationId",
             params: { conversationId: conversation.id },
-            search: {},
+            search: { generateImage: true },
           });
-          await generateImageFor(conversation.id, text);
           return;
         }
         await navigate({
@@ -342,6 +373,11 @@ export function ChatPanel({
   }
 
   function retry() {
+    const imageRetry = lastImageRetryRef.current;
+    if (imageRetry) {
+      void generateImageFor(imageRetry.id, imageRetry.prompt);
+      return;
+    }
     if (!conversationId) return;
     setErrorMessage(null);
     void runStream(conversationId, mode);
@@ -480,7 +516,7 @@ export function ChatPanel({
           )}
           <div className="aurora-frame rounded-2xl border border-border bg-card p-2 shadow-lg transition-colors focus-within:border-primary/60">
             <span aria-hidden className={`aurora-frame-glow ${busy ? "aurora-active" : ""}`} />
-            <Textarea
+          <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -495,6 +531,7 @@ export function ChatPanel({
                   : "Ask Priyanshu 2.0 anything…"
               }
               rows={1}
+              maxLength={tool === "image" ? 2048 : undefined}
               className="max-h-48 min-h-11 resize-none border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:ring-0"
             />
             <div className="flex flex-wrap items-center gap-1 px-1 pt-1">

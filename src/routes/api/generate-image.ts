@@ -37,11 +37,14 @@ export const Route = createFileRoute("/api/generate-image")({
         if (!accessToken) return new Response("Unauthorized", { status: 401 });
 
         const { conversationId, prompt } = (await request.json().catch(() => ({}))) as Body;
-        if (!conversationId || !prompt?.trim()) {
-          return new Response(JSON.stringify({ error: "A prompt is required." }), {
+        if (!conversationId || !prompt?.trim() || prompt.trim().length > 2048) {
+          return new Response(
+            JSON.stringify({ error: prompt?.trim() ? "Keep image prompts under 2,048 characters." : "A prompt is required." }),
+            {
             status: 400,
             headers: { "Content-Type": "application/json" },
-          });
+            },
+          );
         }
 
         const supabase = userScopedClient(accessToken);
@@ -61,16 +64,17 @@ export const Route = createFileRoute("/api/generate-image")({
         const result = await generateImage(prompt.trim());
         if (!result.ok) {
           return new Response(JSON.stringify({ error: result.message, code: result.code }), {
-            status: 200,
+            status: result.code === "rate_limit" ? 429 : 503,
             headers: { "Content-Type": "application/json" },
           });
         }
 
         const bytes = decodeBase64(result.base64);
-        const path = `${user.id}/generated/${crypto.randomUUID()}.jpg`;
+        const extension = result.mimeType === "image/png" ? "png" : "jpg";
+        const path = `${user.id}/generated/${crypto.randomUUID()}.${extension}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-files")
-          .upload(path, bytes, { contentType: "image/jpeg" });
+          .upload(path, bytes, { contentType: result.mimeType });
         if (uploadError) {
           console.error("generated image upload failed", uploadError.message);
           return new Response(
@@ -79,18 +83,18 @@ export const Route = createFileRoute("/api/generate-image")({
           );
         }
 
-        const fileName = `${prompt.trim().slice(0, 40).replace(/[^\w\s.-]/g, "") || "image"}.jpg`;
+        const fileName = `${prompt.trim().slice(0, 40).replace(/[^\w\s.-]/g, "") || "image"}.${extension}`;
         const { data: fileRow, error: fileError } = await supabase
           .from("uploaded_files")
           .insert({
             user_id: user.id,
             conversation_id: conversationId,
             file_name: fileName,
-            mime_type: "image/jpeg",
+            mime_type: result.mimeType,
             size_bytes: bytes.byteLength,
             storage_path: path,
             status: "ready",
-            metadata: { generated: true, prompt: prompt.trim(), model: IMAGE_MODEL } as never,
+            metadata: { generated: true, prompt: prompt.trim(), model: result.model } as never,
           })
           .select("id, file_name, mime_type, size_bytes")
           .single();
@@ -102,12 +106,12 @@ export const Route = createFileRoute("/api/generate-image")({
           );
         }
 
-        await supabase.from("messages").insert({
+        const { error: messageError } = await supabase.from("messages").insert({
           conversation_id: conversationId,
           user_id: user.id,
           role: "assistant",
           content: `Here is the image for: **${prompt.trim()}**`,
-          model_slug: IMAGE_MODEL,
+          model_slug: result.model,
           attachments: [
             {
               id: fileRow.id,
@@ -118,6 +122,13 @@ export const Route = createFileRoute("/api/generate-image")({
           ] as never,
           metadata: { kind: "image" } as never,
         });
+        if (messageError) {
+          console.error("generated image message failed", messageError.message);
+          return new Response(
+            JSON.stringify({ error: "The image was created, but could not be added to this conversation. Please try again." }),
+            { status: 503, headers: { "Content-Type": "application/json" } },
+          );
+        }
         await supabase
           .from("conversations")
           .update({ last_message_at: new Date().toISOString() })
@@ -126,7 +137,7 @@ export const Route = createFileRoute("/api/generate-image")({
           user_id: user.id,
           conversation_id: conversationId,
           event_type: "image_generation",
-          model_slug: IMAGE_MODEL,
+          model_slug: result.model,
           total_tokens: 0,
         });
 
