@@ -37,12 +37,21 @@ export const Route = createFileRoute("/api/generate-image")({
         if (!accessToken) return new Response("Unauthorized", { status: 401 });
 
         const { conversationId, prompt } = (await request.json().catch(() => ({}))) as Body;
-        if (!conversationId || !prompt?.trim() || prompt.trim().length > 2048) {
+        if (
+          !conversationId ||
+          typeof prompt !== "string" ||
+          !prompt.trim() ||
+          prompt.trim().length > 2048
+        ) {
           return new Response(
-            JSON.stringify({ error: prompt?.trim() ? "Keep image prompts under 2,048 characters." : "A prompt is required." }),
+            JSON.stringify({
+              error: typeof prompt === "string" && prompt.trim()
+                ? "Keep image prompts under 2,048 characters."
+                : "A prompt is required.",
+            }),
             {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
+              status: 400,
+              headers: { "Content-Type": "application/json" },
             },
           );
         }
@@ -79,7 +88,7 @@ export const Route = createFileRoute("/api/generate-image")({
           console.error("generated image upload failed", uploadError.message);
           return new Response(
             JSON.stringify({ error: "Something went wrong while saving the image. Please try again." }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
+            { status: 503, headers: { "Content-Type": "application/json" } },
           );
         }
 
@@ -100,9 +109,10 @@ export const Route = createFileRoute("/api/generate-image")({
           .single();
         if (fileError || !fileRow) {
           console.error("generated image row failed", fileError?.message);
+          await supabase.storage.from("chat-files").remove([path]).catch(() => undefined);
           return new Response(
             JSON.stringify({ error: "Something went wrong while saving the image. Please try again." }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
+            { status: 503, headers: { "Content-Type": "application/json" } },
           );
         }
 
@@ -124,6 +134,10 @@ export const Route = createFileRoute("/api/generate-image")({
         });
         if (messageError) {
           console.error("generated image message failed", messageError.message);
+          await Promise.allSettled([
+            supabase.from("uploaded_files").delete().eq("id", fileRow.id),
+            supabase.storage.from("chat-files").remove([path]),
+          ]);
           return new Response(
             JSON.stringify({ error: "The image was created, but could not be added to this conversation. Please try again." }),
             { status: 503, headers: { "Content-Type": "application/json" } },
