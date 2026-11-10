@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { generateImage, IMAGE_MODEL } from "@/lib/ai/images.server";
+import { generateImage } from "@/lib/ai/images.server";
 
 type Body = { conversationId?: string; prompt?: string };
 
@@ -27,6 +27,16 @@ function decodeBase64(b64: string): Uint8Array {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
+}
+
+function detectImageMime(bytes: Uint8Array, fallback: "image/png" | "image/jpeg") {
+  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    return "image/png" as const;
+  }
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return "image/jpeg" as const;
+  }
+  return fallback;
 }
 
 export const Route = createFileRoute("/api/generate-image")({
@@ -79,11 +89,12 @@ export const Route = createFileRoute("/api/generate-image")({
         }
 
         const bytes = decodeBase64(result.base64);
-        const extension = result.mimeType === "image/png" ? "png" : "jpg";
+        const mimeType = detectImageMime(bytes, result.mimeType);
+        const extension = mimeType === "image/png" ? "png" : "jpg";
         const path = `${user.id}/generated/${crypto.randomUUID()}.${extension}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-files")
-          .upload(path, bytes, { contentType: result.mimeType });
+          .upload(path, bytes, { contentType: mimeType });
         if (uploadError) {
           console.error("generated image upload failed", uploadError.message);
           return new Response(
@@ -99,7 +110,7 @@ export const Route = createFileRoute("/api/generate-image")({
             user_id: user.id,
             conversation_id: conversationId,
             file_name: fileName,
-            mime_type: result.mimeType,
+            mime_type: mimeType,
             size_bytes: bytes.byteLength,
             storage_path: path,
             status: "ready",
