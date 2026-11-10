@@ -293,7 +293,7 @@ export function ChatPanel({
   );
 
   useEffect(() => {
-    if (autorunImage && conversationId && !imageStartedRef.current) {
+    if (autorunImage && conversationId && !isLoading && !imageStartedRef.current) {
       imageStartedRef.current = true;
       const originalPrompt = messages.find((message) => message.role === "user")?.content;
       if (originalPrompt) void generateImageFor(conversationId, originalPrompt);
@@ -304,7 +304,7 @@ export function ChatPanel({
         replace: true,
       });
     }
-  }, [autorunImage, conversationId, generateImageFor, messages, navigate]);
+  }, [autorunImage, conversationId, generateImageFor, isLoading, messages, navigate]);
 
   const send = useMutation({
     mutationFn: async () => {
@@ -474,10 +474,18 @@ export function ChatPanel({
               {generatingImage && (
                 <div className="flex gap-3">
                   <BrandLogo className="mt-1 size-7" />
-                  <span className="inline-flex items-center gap-2 text-sm">
-                    <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-                    <span className="aurora-text font-medium">Creating your image…</span>
-                  </span>
+                  <div role="status" aria-live="polite" className="w-full max-w-sm space-y-2">
+                    <span className="inline-flex items-center gap-2 text-sm">
+                      <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                      <span className="aurora-text font-medium">Creating your image…</span>
+                    </span>
+                    <div
+                      aria-label="Image generation in progress"
+                      className="h-1 overflow-hidden rounded-full bg-secondary"
+                    >
+                      <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
+                    </div>
+                  </div>
                 </div>
               )}
               {errorMessage && !busy && (

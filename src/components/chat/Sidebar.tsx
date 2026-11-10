@@ -67,7 +67,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["conversations"] });
 
-  const remove = useMutation<void, Error, string, { previous?: Conversation[] }>({
+  const remove = useMutation<void, Error, string, { previous: Conversation[] | undefined }>({
     mutationFn: deleteConversation,
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["conversations"] });
