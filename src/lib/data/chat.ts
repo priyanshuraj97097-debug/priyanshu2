@@ -97,8 +97,20 @@ export async function togglePinned(id: string, is_pinned: boolean) {
 }
 
 export async function deleteConversation(id: string) {
+  const { data: files, error: filesError } = await supabase
+    .from("uploaded_files")
+    .select("storage_path")
+    .eq("conversation_id", id);
+  if (filesError) throw filesError;
+
   const { error } = await supabase.from("conversations").delete().eq("id", id);
   if (error) throw error;
+
+  const paths = (files ?? []).map((file) => file.storage_path);
+  if (paths.length) {
+    const { error: storageError } = await supabase.storage.from("chat-files").remove(paths);
+    if (storageError) console.warn("Conversation files could not be fully removed.");
+  }
 }
 
 export async function listMessages(conversationId: string): Promise<ChatMessage[]> {
@@ -239,7 +251,7 @@ export function isSupportedFile(file: File) {
 }
 
 /** Short-lived signed URL for a private file the current user owns. */
-export async function getFileUrl(fileId: string): Promise<string | null> {
+export async function getFileUrl(fileId: string, download = false): Promise<string | null> {
   const { data: row, error } = await supabase
     .from("uploaded_files")
     .select("storage_path")
@@ -248,6 +260,6 @@ export async function getFileUrl(fileId: string): Promise<string | null> {
   if (error || !row) return null;
   const { data } = await supabase.storage
     .from("chat-files")
-    .createSignedUrl(row.storage_path, 60 * 60);
+    .createSignedUrl(row.storage_path, 60 * 60, download ? { download: true } : undefined);
   return data?.signedUrl ?? null;
 }

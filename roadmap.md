@@ -1,6 +1,6 @@
 # Deployment readiness
 
-- [ ] Add high-quality image generation with a secure model fallback, chat preview/download, and confirmed optimistic conversation deletion.
+- [x] Add high-quality image generation with a secure model fallback, chat preview/download, and confirmed optimistic conversation deletion.
 
 - [x] Configure TanStack Start, Cloudflare Vite plugin, and Wrangler Worker output.
 - [x] Protect local env files and bind Workers AI for image generation.

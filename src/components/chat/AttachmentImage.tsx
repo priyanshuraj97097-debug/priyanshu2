@@ -13,6 +13,12 @@ export function AttachmentImage({ attachment }: { attachment: Attachment }) {
     queryFn: () => getFileUrl(attachment.id),
     staleTime: 45 * 60 * 1000,
   });
+  const { data: downloadUrl } = useQuery({
+    queryKey: ["file-download-url", attachment.id],
+    queryFn: () => getFileUrl(attachment.id, true),
+    enabled: !!url,
+    staleTime: 45 * 60 * 1000,
+  });
 
   if (isLoading) {
     return (
@@ -52,10 +58,8 @@ export function AttachmentImage({ attachment }: { attachment: Attachment }) {
         <figcaption className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
           <span className="truncate">{attachment.name}</span>
           <a
-            href={url}
+          href={downloadUrl ?? url}
             download={attachment.name}
-            target="_blank"
-            rel="noreferrer"
             className="inline-flex shrink-0 items-center gap-1 hover:text-foreground"
           >
             <Download className="size-3.5" /> Download
@@ -73,7 +77,7 @@ export function AttachmentImage({ attachment }: { attachment: Attachment }) {
           <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
             <p className="min-w-0 truncate text-sm text-muted-foreground">{attachment.name}</p>
             <Button asChild size="sm" variant="secondary">
-              <a href={url} download={attachment.name} target="_blank" rel="noreferrer">
+            <a href={downloadUrl ?? url} download={attachment.name}>
                 <Download className="size-4" /> Download
               </a>
             </Button>
