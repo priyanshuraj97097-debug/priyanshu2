@@ -294,9 +294,10 @@ export function ChatPanel({
 
   useEffect(() => {
     if (autorunImage && conversationId && !isLoading && !imageStartedRef.current) {
-      imageStartedRef.current = true;
       const originalPrompt = messages.find((message) => message.role === "user")?.content;
-      if (originalPrompt) void generateImageFor(conversationId, originalPrompt);
+      if (!originalPrompt) return;
+      imageStartedRef.current = true;
+      void generateImageFor(conversationId, originalPrompt);
       void navigate({
         to: "/chat/$conversationId",
         params: { conversationId },
