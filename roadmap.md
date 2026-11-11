@@ -1,3 +1,5 @@
+- [ ] Open directly to chat using private browser-scoped anonymous sessions; remove all sign-up/sign-in gates and controls.
+
 # Deployment readiness
 
 - [x] Add high-quality image generation with a secure model fallback, chat preview/download, and confirmed optimistic conversation deletion.
