@@ -1,4 +1,6 @@
 - [ ] Open directly to chat using private browser-scoped anonymous sessions; remove all sign-up/sign-in gates and controls.
+- [ ] Fix confirmed individual conversation deletion across persistent and browser-local guest storage.
+- [ ] Diagnose and fix image generation using a supported provider, actionable errors, and verified image display/download.
 
 # Deployment readiness
 
